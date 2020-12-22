@@ -13,8 +13,8 @@ public class test {
     public static void main(String[] args) {
         Driver driver = GraphDatabase.driver("bolt://localhost", AuthTokens.basic("neo4j", "neo4j"));
         try (Session session = driver.session()) {
-            var service = new EmailService(driver, Environment.getNeo4jDatabase()) ;
-            List<Map<String, Object>> res = service.findDestinators("0") ;
+            var service = new CommunityService(driver, Environment.getNeo4jDatabase()) ;
+            List<Map<String, Object>> res = service.Louvain("graph_email_undirected", "stream") ;
             if(res.isEmpty()){
                 System.out.println("Vide !");
             }
@@ -26,7 +26,6 @@ public class test {
                     }
                 }
             }
-            Map<String, Object> graph = service.graph(10) ;
         }
         driver.close();
     }
