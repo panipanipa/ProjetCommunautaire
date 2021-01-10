@@ -13,9 +13,9 @@ public class DbRoutes implements SparkApplication {
 
     private final Gson gson = new GsonBuilder().disableHtmlEscaping().create();
 
-    private final EmailService service;
+    private final CommunityService service;
 
-    public DbRoutes(EmailService service) {
+    public DbRoutes(CommunityService service) {
         this.service = service;
     }
 

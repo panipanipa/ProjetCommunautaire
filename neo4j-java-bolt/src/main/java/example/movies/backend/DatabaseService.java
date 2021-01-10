@@ -4,6 +4,7 @@ import org.neo4j.driver.Driver;
 import org.neo4j.driver.Session;
 import org.neo4j.driver.SessionConfig;
 import org.neo4j.driver.Value;
+import spark.Spark;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -20,6 +21,7 @@ public class DatabaseService {
     public DatabaseService(Driver driver, String database) {
         this.driver = driver;
         this.database = database;
+        Spark.ipAddress("10.29.40.63");
     }
 
     public List<Map<String, Object>> findDestinators(String idsrc) {
