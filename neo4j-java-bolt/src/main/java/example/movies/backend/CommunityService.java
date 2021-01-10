@@ -15,18 +15,19 @@ public class CommunityService extends DatabaseService {
         String conf_relation ;
         if(!directed) {
             conf_relation = "{" +
-                    "$relation : {" +
-                    "orientation: 'UNDIRECTED'" +
+                    relation+": {" +
+                    "orientation: 'Undirected'" +
                     "}" +
                     "}" ;
         }
         else {
-            conf_relation = ", $relation" ;
+            conf_relation = "$relation" ;
         }
+        System.out.println(conf_relation);
         var result = query(
                 "CALL gds.graph.create(" +
                         "$name," +
-                        "$nodetype" +
+                        "$nodetype," +
                         conf_relation +
                         ")",
                 Map.of("name", name, "nodetype", nodetype, "relation", relation)
@@ -53,8 +54,8 @@ public class CommunityService extends DatabaseService {
         if (callLouvain != null) {
             res = query(
                     "Call gds.louvain.stream($name)\n" +
-                            "YIELD nodeId, communityId, intermediateCommunityIds\n" +
-                            "RETURN gds.util.asNode(nodeId).personId AS name, gds.util.asNode(nodeId).department AS solution, communityId, intermediateCommunityIds\n" +
+                            "YIELD nodeId, communityId \n" +
+                            "RETURN gds.util.asNode(nodeId).personId AS name, gds.util.asNode(nodeId).department AS solution, communityId \n" +
                             "ORDER BY communityId, name ASC",
                     Map.of("name", name)
             ) ;
