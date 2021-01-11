@@ -20,7 +20,7 @@ public class DBServer {
                 AuthTokens.basic(Environment.getNeo4jUsername(), Environment.getNeo4jPassword())
         );
 
-        var service = new EmailService(driver, Environment.getNeo4jDatabase());
+        var service = new CommunityService(driver, Environment.getNeo4jDatabase());
         new DbRoutes(service).init();
 
         Runtime.getRuntime().addShutdownHook(new Thread(driver::close));
