@@ -16,7 +16,7 @@ public class test {
         Driver driver = GraphDatabase.driver("bolt://localhost", AuthTokens.basic("neo4j", "neo4j"));
         try (Session session = driver.session()) {
             var service = new CommunityService(driver, Environment.getNeo4jDatabase()) ;
-            //service.create_graph("email_directed", "Person", "Send", true) ;
+            service.create_graph("email_directed", "Person", "Send", true) ;
             List<Map<String, Object>> res = service.Louvain("email_undirected", "stream") ;
             if(res.isEmpty()){
                 System.out.println("Vide !");
@@ -38,9 +38,11 @@ public class test {
                     else {
                         for(Map.Entry<Object, Double> member:members.entrySet()) {
                             Double taux = member.getValue() / size_community * 100;
-                            System.out.print(member.getKey() + " : " + taux + "% | ") ;
+                            if(taux>10.0)
+                                System.out.print(member.getKey() + " : " + taux + "% | ") ;
                         }
-                        System.out.println("taille communauté : " + size_community);
+                        if(size_community>1)
+                            System.out.println("taille communauté : " + size_community);
                         size_community = 1 ;
                         members.clear() ;
                     }
@@ -54,9 +56,11 @@ public class test {
                 }
                 for(Map.Entry<Object, Double> member:members.entrySet()) {
                     Double taux = member.getValue() / size_community * 100;
-                    System.out.print(member.getKey() + " : " + taux + "% | ") ;
+                    if(taux>10.0)
+                        System.out.print(member.getKey() + " : " + taux + "% | ") ;
                 }
-                System.out.println("taille communauté : " + size_community);
+                if(size_community>1)
+                    System.out.println("taille communauté : " + size_community);
             }
         }
         driver.close();

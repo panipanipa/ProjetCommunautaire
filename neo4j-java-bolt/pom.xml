@@ -14,7 +14,7 @@
         <project.build.sourceEncoding>${encoding}</project.build.sourceEncoding>
         <project.reporting.outputEncoding>${encoding}</project.reporting.outputEncoding>
         <maven.compiler.release>11</maven.compiler.release>
-        <neo4j.version>3.5.14</neo4j.version>
+        <neo4j.version>4.2.0</neo4j.version>
     </properties>
 
     <dependencyManagement>

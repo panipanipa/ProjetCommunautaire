@@ -2,10 +2,15 @@ package example.movies.backend;
 
 import org.neo4j.driver.Driver;
 
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 public class CommunityService extends DatabaseService {
+
+    private static final List<String> modes = Arrays.asList("stats", "write", "mutate") ;
 
     public CommunityService(Driver driver, String database) {
         super(driver, database) ;
@@ -48,12 +53,14 @@ public class CommunityService extends DatabaseService {
         switch (mode) {
             case "stream" :
                 callLouvain = "gds.louvain.stream" ;
+                break;
             case "write":
                 callLouvain = "gds.louvain.write" ;
+                break;
         }
         if (callLouvain != null) {
             res = query(
-                    "Call gds.louvain.stream($name)\n" +
+                    "Call "+ callLouvain +"($name)\n" +
                             "YIELD nodeId, communityId \n" +
                             "RETURN gds.util.asNode(nodeId).personId AS name, gds.util.asNode(nodeId).department AS solution, communityId \n" +
                             "ORDER BY communityId, name ASC",
@@ -62,4 +69,24 @@ public class CommunityService extends DatabaseService {
         }
         return res;
     }
+
+    public List<Map<String, Object>> labelPropagation(String name, String mode) {
+        List<Map<String, Object>> res = null;
+        String query = "" ;
+        if ("stream".equals(mode)) {
+            query = "Call gds.labelPropagation.stream($name) " +
+                    "YIELD nodeId, communityId " +
+                    "RETURN gds.util.asNode(nodeId).personId AS name, gds.util.asNode(nodeId).department AS solution, communityId " +
+                    "ORDER BY communityId, name ASC";
+        } else if (modes.contains(mode)) {
+            query = "Call gds.labelPropagation." + mode + "($name) " +
+                    "YIELD communityCount, ranIterations, didConverge,  computeMillis, communityDistribution";
+        }
+        if (modes.contains(mode)) {
+            res = query(query, Map.of("name", name)) ;
+        }
+        return res;
+    }
+
+
 }

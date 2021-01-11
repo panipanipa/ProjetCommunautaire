@@ -8,6 +8,7 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 
 import static spark.Spark.get;
+import static spark.Spark.path;
 
 public class DbRoutes implements SparkApplication {
 
@@ -28,5 +29,38 @@ public class DbRoutes implements SparkApplication {
             return gson.toJson(service.graph(limit));
         });
         get("/path/:start", (req,res) -> gson.toJson(service.findDestinators(URLDecoder.decode(req.params("start"), StandardCharsets.UTF_8))));
+        path("/community", () -> {
+            get("/louvain/:name", (req,res) -> {
+                String name = URLDecoder.decode(req.params("name"),  StandardCharsets.UTF_8) ;
+                if(!service.graph_exists(name))
+                    service.create_graph(name, "Person", "Send", false);
+                return gson.toJson(service.Louvain(name, "stream")) ;
+            }) ;
+
+            get("/louvain/:name/:directed", (req,res) -> {
+                String name = URLDecoder.decode(req.params("name"),  StandardCharsets.UTF_8) ;
+                Boolean directed = Boolean.parseBoolean(req.params("directed")) ;
+                if(!service.graph_exists(name))
+                    service.create_graph(name, "Person", "Send", directed);
+                return gson.toJson(service.Louvain(name, "stream")) ;
+            }) ;
+
+            get("/labelPropagation/:name", (req,res) -> {
+                String name = URLDecoder.decode(req.params("name"),  StandardCharsets.UTF_8) ;
+                if(!service.graph_exists(name))
+                    service.create_graph(name, "Person", "Send", false);
+                return gson.toJson(service.labelPropagation(name, "stream")) ;
+            }) ;
+
+            get("/labelPropagation/:name/:directed", (req,res) -> {
+                String name = URLDecoder.decode(req.params("name"),  StandardCharsets.UTF_8) ;
+                Boolean directed = Boolean.parseBoolean(req.params("directed")) ;
+                if(!service.graph_exists(name))
+                    service.create_graph(name, "Person", "Send", directed);
+                return gson.toJson(service.labelPropagation(name, "stream")) ;
+            }) ;
+        });
+
+        get("/community/labelPropagation/:name", (req,res) -> gson.toJson(service.labelPropagation((URLDecoder.decode(req.params("name"),  StandardCharsets.UTF_8)), "stream"))) ;
     }
 }
