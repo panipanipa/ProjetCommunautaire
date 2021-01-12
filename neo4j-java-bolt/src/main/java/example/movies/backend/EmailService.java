@@ -26,6 +26,7 @@ public class EmailService {
         this.database = database;
     }
 
+    //Find every person which idsrc sent an email to.
     public List<Map<String, Object>> findDestinators(String idsrc) {
         var result = query(
                 "Match (p:Person {personId:$idsrc})-[:Send]->(m) return m",
@@ -50,6 +51,7 @@ public class EmailService {
         return result.isEmpty() ? new ArrayList<>() : result;
     }
 
+    //search a node in the graph given its id (here name)
     public Iterable<Map<String, Object>> search(String query) {
         if (query == null || query.trim().isEmpty()) return Collections.emptyList();
         return query(
@@ -60,6 +62,7 @@ public class EmailService {
         );
     }
 
+    //return the graph or only "limit" nodes
     public Map<String, Object> graph(int limit) {
         var result = query(
                 "MATCH (m:Person)<-[:Send]-(a:Person) " +

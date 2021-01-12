@@ -88,5 +88,23 @@ public class CommunityService extends DatabaseService {
         return res;
     }
 
+    public List<Map<String, Object>> Triangle(String name, String mode) {
+        List<Map<String, Object>> res = null;
+        String query = "" ;
+                            //Triangle count node by node.
+        if ("stream".equals(mode)) {
+            query = "CALL gds.triangleCount.stream(graphName:($name)) +
+                    "YIELD   nodeId: Integer, triangleCount: Integer"
+                            //Stream mode = info + Global triangle Count
+        else if (modes.contains(mode)) {
+            query = "Call gds.triangleCount." + mode + "($name) " +
+                    "YIELD globalTriangleCount: Integer, computeMillis";
+        }
+        if (modes.contains(mode)) {
+            res = query(query, Map.of("name", name)) ;
+        }
+        return res;
+    }
+
 
 }

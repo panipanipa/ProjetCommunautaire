@@ -13,15 +13,18 @@ import java.util.Map;
 public class test {
 
     public static void main(String[] args) {
+        //log in neo4j
         Driver driver = GraphDatabase.driver("bolt://localhost", AuthTokens.basic("neo4j", "neo4j"));
         try (Session session = driver.session()) {
             var service = new CommunityService(driver, Environment.getNeo4jDatabase()) ;
+            //create the graph and launches Louvain
             service.create_graph("email_directed", "Person", "Send", true) ;
             List<Map<String, Object>> res = service.Louvain("email_undirected", "stream") ;
             if(res.isEmpty()){
                 System.out.println("Vide !");
             }
             else {
+                //Return every community, and the nodes associated. Return their original department, if the department contributes to at least 10% of the community
                 ArrayList<Integer> taux_exact = new ArrayList<Integer>() ;
                 Object pred = null ;
                 int size_community = 0 ;
