@@ -6,6 +6,7 @@ import org.neo4j.driver.SessionConfig;
 import org.neo4j.driver.Value;
 import spark.Spark;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -21,7 +22,12 @@ public class DatabaseService {
     public DatabaseService(Driver driver, String database) {
         this.driver = driver;
         this.database = database;
-        Spark.ipAddress("10.29.40.63");
+        //Spark.ipAddress("10.29.40.63");
+    }
+
+    public void importCSV(File file) {
+        String query = "LOAD CSV FROM '{csv-dir}/artists.csv' AS line\n" +
+                "CREATE (:Test { name: line[1], year: toInteger(line[2])})" ;
     }
 
     public List<Map<String, Object>> findDestinators(String idsrc) {
