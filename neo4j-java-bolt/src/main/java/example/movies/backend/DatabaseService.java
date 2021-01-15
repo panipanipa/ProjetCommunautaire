@@ -7,11 +7,7 @@ import org.neo4j.driver.Value;
 import spark.Spark;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class DatabaseService {
 
@@ -25,9 +21,13 @@ public class DatabaseService {
         //Spark.ipAddress("10.29.40.63");
     }
 
-    public void importCSV(File file) {
-        String query = "LOAD CSV FROM '{csv-dir}/artists.csv' AS line\n" +
-                "CREATE (:Test { name: line[1], year: toInteger(line[2])})" ;
+    public void importCSV(String path, String sepa, boolean local) {
+        System.out.println("import CSV");
+        String dest = local ? "'file://"+path+"'" : path ;
+        String query = "LOAD CSV FROM "+ dest +" AS line " +
+                "FIELDTERMINATOR '" + sepa  + "' " +
+                "CREATE (:Email { name: toInteger(line[1]), department: toInteger(line[2])}) " ;
+        write_query(query) ;
     }
 
     public List<Map<String, Object>> findDestinators(String idsrc) {
@@ -92,11 +92,20 @@ public class DatabaseService {
         return Map.of("nodes", nodes, "links", rels);
     }
 
+    //protected
     protected List<Map<String, Object>> query(String query, Map<String, Object> params) {
         try (Session session = getSession()) {
            // System.out.println(params);
             return session.readTransaction(
                     tx -> tx.run(query, params).list( r -> r.asMap(DatabaseService::convert))
+            );
+        }
+    }
+
+    protected void write_query(String query) {
+        try(Session session = getSession()) {
+            session.writeTransaction(
+                    tx -> tx.run(query)
             );
         }
     }
