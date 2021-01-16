@@ -14,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 
@@ -98,7 +99,7 @@ public class DbRoutes implements SparkApplication {
                 String name = URLDecoder.decode(req.params("name"),  StandardCharsets.UTF_8) ;
                 if(!service.graph_exists(name))
                     service.create_graph(name, "Person", "Send", false);
-                return gson.toJson(service.Louvain(name, "stream")) ;
+                return gson.toJson(service.louvain(name, "stream", Arrays.asList("personId", "department"))) ;
             }) ;
 
             //same but with possibility of making directed edges.
@@ -107,7 +108,7 @@ public class DbRoutes implements SparkApplication {
                 Boolean directed = Boolean.parseBoolean(req.params("directed")) ;
                 if(!service.graph_exists(name))
                     service.create_graph(name, "Person", "Send", directed);
-                return gson.toJson(service.Louvain(name, "stream")) ;
+                return gson.toJson(service.louvain(name, "stream", Arrays.asList("personId", "department"))) ;
             }) ;
 
             //launch labelPropagation one. If the graph doesn't already exist, create it (undirected).

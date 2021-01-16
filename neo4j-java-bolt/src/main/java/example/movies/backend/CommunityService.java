@@ -1,5 +1,6 @@
 package example.movies.backend;
 
+import javafx.util.Pair;
 import org.neo4j.driver.Driver;
 
 import java.lang.reflect.Array;
@@ -13,7 +14,7 @@ public class CommunityService extends DatabaseService {
     private static final List<String> modes = Arrays.asList("stats", "write", "mutate") ;
 
     public CommunityService(Driver driver, String database) {
-        super(driver, database) ;
+        super(driver, database);
     }
 
     public void create_graph(String name, String nodetype, String relation, boolean directed) {
@@ -47,25 +48,38 @@ public class CommunityService extends DatabaseService {
         return (Boolean) result.get(0).get("exists") ;
     }
 
-    public List<Map<String, Object>> Louvain(String name, String mode) {
+    /*
+        Call gds.labelPropagation.stream("email_undirected")
+    YIELD nodeId, communityId
+    RETURN communityId,
+    collect(gds.util.asNode(nodeId).personId) as members,
+    collect(gds.util.asNode(nodeId).department) as solution
+    ORDER BY communityId ASC
+     */
+
+    public List<Map<String, Object>> louvain(String name, String mode, List<String> fields) {
         String callLouvain = null ;
         List<Map<String, Object>> res = null;
-        switch (mode) {
-            case "stream" :
-                callLouvain = "gds.louvain.stream" ;
-                break;
-            case "write":
-                callLouvain = "gds.louvain.write" ;
-                break;
-        }
-        if (callLouvain != null) {
-            res = query(
-                    "Call "+ callLouvain +"($name)\n" +
-                            "YIELD nodeId, communityId \n" +
-                            "RETURN gds.util.asNode(nodeId).personId AS name, gds.util.asNode(nodeId).department AS solution, communityId \n" +
-                            "ORDER BY communityId, name ASC",
-                    Map.of("name", name)
-            ) ;
+        String query = "" ;
+        StringBuilder query2 = new StringBuilder("Call ") ;
+        if ("stream".equals(mode)) {
+            query2 .append("gds.louvain.stream($name) YIELD nodeId, communityId RETURN communityId") ;
+            int i = 0 ;
+            for (String field:fields) {
+                query2.append(",collect(gds.util.asNode(nodeId).").append(field).append(") as f").append(i) ;
+            }
+            /*
+            query = "Call gds.louvain.stream($name) " +
+                    "YIELD nodeId, communityId " +
+                    "RETURN gds.util.asNode(nodeId).personId AS name, gds.util.asNode(nodeId).department AS solution, communityId \n" +
+                    "ORDER BY communityId, name ASC" ;
+
+             */
+            res = query(query2.toString(), Map.of("name", name)) ;
+        } else if (modes.contains(mode)) {
+            query = "Call gds.louvain." + mode + "($name) " +
+                    "YIELD communityCount, ranIterations, didConverge,  computeMillis, communityDistribution";
+            res = query(query, Map.of("name", name)) ;
         }
         return res;
     }
@@ -78,11 +92,10 @@ public class CommunityService extends DatabaseService {
                     "YIELD nodeId, communityId " +
                     "RETURN gds.util.asNode(nodeId).personId AS name, gds.util.asNode(nodeId).department AS solution, communityId " +
                     "ORDER BY communityId, name ASC";
+            res = query(query, Map.of("name", name)) ;
         } else if (modes.contains(mode)) {
             query = "Call gds.labelPropagation." + mode + "($name) " +
                     "YIELD communityCount, ranIterations, didConverge,  computeMillis, communityDistribution";
-        }
-        if (modes.contains(mode)) {
             res = query(query, Map.of("name", name)) ;
         }
         return res;
@@ -102,6 +115,24 @@ public class CommunityService extends DatabaseService {
         else if (modes.contains(mode)) {
             query = "Call gds.triangleCount." + mode + "($name) " +
                     "YIELD globalTriangleCount, computeMillis";
+            res = query(query, Map.of("name", name)) ;
+        }
+        return res;
+    }
+
+    public List<Map<String, Object>> localClusteringCoef(String name, String mode) {
+        List<Map<String, Object>> res = null ;
+        String query = "" ;
+        if ("stream".equals(mode)) {
+            query = "CALL  gds.localClusteringCoefficient.stream($name) " +
+                    "YIELD   nodeId, localClusteringCoefficient as coef " +
+                    "RETURN gds.util.asNode(nodeId).personId AS name, coef";
+            //Stream mode = info + Global triangle Count
+            res = query(query, Map.of("name", name)) ;
+        }
+        else if (modes.contains(mode)) {
+            query = "Call gds.localClusteringCoefficient." + mode + "($name) " +
+                    "YIELD averageClusteringCoefficient as avCef, nodeCount, computeMillis";
             res = query(query, Map.of("name", name)) ;
         }
         return res;

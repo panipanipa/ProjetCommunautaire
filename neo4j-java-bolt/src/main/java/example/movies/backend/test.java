@@ -7,10 +7,7 @@ import org.neo4j.driver.Driver;
 import org.neo4j.driver.Session;
 
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class test {
 
@@ -30,8 +27,10 @@ public class test {
 
     public static void test_Louvain(CommunityService service) {
         //create the graph and launches Louvain
-        service.create_graph("email_directed", "Person", "Send", true) ;
-        List<Map<String, Object>> res = service.labelPropagation("email_undirected", "stream") ;
+        if(!service.graph_exists("email_undirected"))
+            service.create_graph("email_undirected", "Person", "Send", false) ;
+        List<Map<String, Object>> res = service.louvain("email_undirected", "stream",
+                Collections.singletonList("department"));
         if(res.isEmpty()){
             System.out.println("Vide !");
         }
@@ -40,12 +39,26 @@ public class test {
             ArrayList<Integer> taux_exact = new ArrayList<Integer>() ;
             Object pred = null ;
             int size_community = 0 ;
-            HashMap<Object, Double> members = new HashMap<Object, Double>() ;
+            //HashMap<Object, Double> members = new HashMap<Object, Double>() ;
             for ( Map<String, Object> one:res)
             {
                 Object community = one.get("communityId");
-                Object solution =  one.get("solution");
-                Object name =  one.get("name");
+                System.out.println("Community : " + community) ;
+                HashMap<Object, Double> presence = new HashMap<Object, Double>() ;
+                int total = 0 ;
+                for (Object id : (Collection<?>) one.get("f0")) {
+                    presence.merge(id, 1.0, Double::sum) ;
+                    total++ ;
+                }
+                if(total>1) {
+                    for(Map.Entry<Object, Double> id:presence.entrySet()) {
+                        Double taux = id.getValue() / total * 100;
+                        if(taux>10.0)
+                            System.out.print(id.getKey() + " : " + taux + "% | ") ;
+                    }
+                }
+            }
+                /*
                 if(pred==null || pred.equals(community)) {
                     size_community++ ;
                     members.merge(solution, 1.0, Double::sum) ;
@@ -67,7 +80,7 @@ public class test {
                     for (Map.Entry<String, Object> entry : one.entrySet()) {
                         System.out.println(entry.getKey() + ":" + entry.getValue());
                     }
-                     */
+
 
                 }
                 for(Map.Entry<Object, Double> member:members.entrySet()) {
@@ -77,6 +90,7 @@ public class test {
                 }
                 if(size_community>1)
                     System.out.println("taille communauté : " + size_community);
+                */
             }
     }
 
@@ -95,12 +109,27 @@ public class test {
         }
     }
 
+    public static void test_localClusteringCoef(CommunityService service) {
+        if(!service.graph_exists("email_undirected"))
+            service.create_graph("email_undirected", "Person", "Send", false) ;
+        List<Map<String, Object>> res = service.localClusteringCoef("email_undirected", "stream") ;
+        if(res.isEmpty()){
+            System.out.println("Vide !");
+        }
+        else {
+            for ( Map<String, Object> one:res)
+            {
+                System.out.println("name " + one.get("name") + " coefficient = " + one.get("coef") ) ;
+            }
+        }
+    }
+
     public static void main(String[] args) {
         //log in neo4j
         Driver driver = GraphDatabase.driver("bolt://localhost", AuthTokens.basic("neo4j", "neo4j"));
         try (Session session = driver.session()) {
             var service = new CommunityService(driver, Environment.getNeo4jDatabase()) ;
-            test_triangle(service) ;
+            test_Louvain(service);
         }
         driver.close();
     }
