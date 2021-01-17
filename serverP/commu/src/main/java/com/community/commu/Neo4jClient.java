@@ -9,24 +9,27 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.AsyncRestOperations;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class Neo4jClient {
 
     public static void createGraphIn() {
-        String url = "http://localhos:8080/create" ;
+        String url = "http://localhost:8080/create" ;
         RestTemplate restTemplate = new RestTemplate();
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
-        MultiValueMap<String, String> map= new LinkedMultiValueMap<String, String>();
-        map.add("name", "java");
-        map.add("nodetype", "Test");
-        map.add("relation", "Send");
-        map.add("directed", "false");
-        map.add("wasOriented", "false");
+        Map<String, Object> map = new HashMap<>();
+        map.put("name", "java");
+        map.put("nodetype", "Test");
+        map.put("relation", "Send");
+        map.put("directed", false);
+        map.put("wasOriented", true);
 
-        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(map, headers);
-        ResponseEntity<String> response = restTemplate.postForEntity( url, request , String.class );
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(map, headers);
+        ResponseEntity<String> response = restTemplate.postForEntity( url, entity , String.class );
         System.out.println(response) ;
     }
 
