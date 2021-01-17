@@ -17,18 +17,31 @@ public class CommunityService extends DatabaseService {
         super(driver, database);
     }
 
-    public void create_graph(String name, String nodetype, String relation, boolean directed) {
+    public void create_graph(String name, String nodetype, String relation, boolean directed, boolean wasOriented) {
         String conf_relation ;
         if(!directed) {
-            conf_relation = "{" +
-                    relation+": {" +
-                    "orientation: 'Undirected'" +
-                    "}" +
-                    "}" ;
+            conf_relation = "{" + relation+": { orientation: 'Undirected'" +
+                    (wasOriented ? ", aggregation : 'SINGLE'" : "") +
+                    "} }" ;
         }
         else {
             conf_relation = "$relation" ;
         }
+        System.out.println(conf_relation);
+        var result = query(
+                "CALL gds.graph.create(" +
+                        "$name," +
+                        "$nodetype," +
+                        conf_relation +
+                        ")",
+                Map.of("name", name, "nodetype", nodetype, "relation", relation)
+        );
+    }
+
+    // oriented by default
+    public void create_graph(String name, String nodetype, String relation) {
+        String conf_relation ;
+        conf_relation = "$relation" ;
         System.out.println(conf_relation);
         var result = query(
                 "CALL gds.graph.create(" +
@@ -84,15 +97,24 @@ public class CommunityService extends DatabaseService {
         return res;
     }
 
-    public List<Map<String, Object>> labelPropagation(String name, String mode) {
+    public List<Map<String, Object>> labelPropagation(String name, String mode, List<String> fields) {
         List<Map<String, Object>> res = null;
         String query = "" ;
+        StringBuilder query2 = new StringBuilder("Call ") ;
         if ("stream".equals(mode)) {
+            query2.append("gds.labelPropagation.stream($name) YIELD nodeId, communityId RETURN communityId");
+            int i = 0;
+            for (String field : fields) {
+                query2.append(",collect(gds.util.asNode(nodeId).").append(field).append(") as f").append(i);
+            }
+            res = query(query2.toString(), Map.of("name", name)) ;
+            /*
             query = "Call gds.labelPropagation.stream($name) " +
                     "YIELD nodeId, communityId " +
                     "RETURN gds.util.asNode(nodeId).personId AS name, gds.util.asNode(nodeId).department AS solution, communityId " +
                     "ORDER BY communityId, name ASC";
             res = query(query, Map.of("name", name)) ;
+             */
         } else if (modes.contains(mode)) {
             query = "Call gds.labelPropagation." + mode + "($name) " +
                     "YIELD communityCount, ranIterations, didConverge,  computeMillis, communityDistribution";

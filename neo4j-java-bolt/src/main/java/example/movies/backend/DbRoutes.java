@@ -30,11 +30,21 @@ public class DbRoutes implements SparkApplication {
 
     private final CommunityService service;
 
+    private GraphCreate graphCreate ;
+
     public DbRoutes(CommunityService service) {
         this.service = service;
+        this.graphCreate = new GraphCreate(service) ;
     }
 
     public void init() {
+
+        post("/create", (request, response) -> {
+            response.type("application/json");
+            GraphIn graph = new Gson().fromJson(request.body(), GraphIn.class);
+            service.create_graph(graph.getName(), graph.getNodetype(), graph.getRelation(), graph.isDirected(), graph.isWasOriented());
+            return "OK" ;
+        });
 
         post("/test", (request, response) -> {
             String location = "/home/denis/5A/"; // the directory location where files will be stored
@@ -94,38 +104,22 @@ public class DbRoutes implements SparkApplication {
 
         //launche community detection algorithm
         path("/community", () -> {
-            //launch Louvain's one. if the graph doesn't exist, create it (undirected) .
+
             get("/louvain/:name", (req,res) -> {
                 String name = URLDecoder.decode(req.params("name"),  StandardCharsets.UTF_8) ;
                 if(!service.graph_exists(name))
-                    service.create_graph(name, "Person", "Send", false);
-                return gson.toJson(service.louvain(name, "stream", Arrays.asList("personId", "department"))) ;
+                    return "graph does not exists !" ;
+                else
+                    return gson.toJson(service.louvain(name, "stream", Arrays.asList("personId", "department"))) ;
             }) ;
 
-            //same but with possibility of making directed edges.
-            get("/louvain/:name/:directed", (req,res) -> {
-                String name = URLDecoder.decode(req.params("name"),  StandardCharsets.UTF_8) ;
-                Boolean directed = Boolean.parseBoolean(req.params("directed")) ;
-                if(!service.graph_exists(name))
-                    service.create_graph(name, "Person", "Send", directed);
-                return gson.toJson(service.louvain(name, "stream", Arrays.asList("personId", "department"))) ;
-            }) ;
-
-            //launch labelPropagation one. If the graph doesn't already exist, create it (undirected).
+            //launch labelPropagation one.
             get("/labelPropagation/:name", (req,res) -> {
                 String name = URLDecoder.decode(req.params("name"),  StandardCharsets.UTF_8) ;
                 if(!service.graph_exists(name))
-                    service.create_graph(name, "Person", "Send", false);
-                return gson.toJson(service.labelPropagation(name, "stream")) ;
-            }) ;
-
-            //same but with possibility of making directed edges
-            get("/labelPropagation/:name/:directed", (req,res) -> {
-                String name = URLDecoder.decode(req.params("name"),  StandardCharsets.UTF_8) ;
-                Boolean directed = Boolean.parseBoolean(req.params("directed")) ;
-                if(!service.graph_exists(name))
-                    service.create_graph(name, "Person", "Send", directed);
-                return gson.toJson(service.labelPropagation(name, "stream")) ;
+                    return "graph does not exists !" ;
+                else
+                    return gson.toJson(service.labelPropagation(name, "stream", Arrays.asList("personId", "department"))) ;
             }) ;
 
             get("/triangle/:name", (req,res)-> {

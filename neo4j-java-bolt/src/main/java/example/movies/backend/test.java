@@ -9,6 +9,7 @@ import org.neo4j.driver.Session;
 
 import java.util.*;
 
+//was tested on email dataset
 public class test {
 
     public static void test_Import(DatabaseService service) {
@@ -28,8 +29,8 @@ public class test {
     public static void test_Louvain(CommunityService service) {
         //create the graph and launches Louvain
         if(!service.graph_exists("email_undirected"))
-            service.create_graph("email_undirected", "Person", "Send", false) ;
-        List<Map<String, Object>> res = service.louvain("email_undirected", "stream",
+            service.create_graph("email_undirected", "Person", "Send", false, true) ;
+        List<Map<String, Object>> res = service.labelPropagation("email_undirected", "stream",
                 Collections.singletonList("department"));
         if(res.isEmpty()){
             System.out.println("Vide !");
@@ -96,7 +97,7 @@ public class test {
 
     public static void test_triangle(CommunityService service) {
         if(!service.graph_exists("email_undirected"))
-            service.create_graph("email_undirected", "Person", "Send", false) ;
+            service.create_graph("email_undirected", "Person", "Send", false, true) ;
         List<Map<String, Object>> res = service.triangle("email_undirected", "stream") ;
         if(res.isEmpty()){
             System.out.println("Vide !");
@@ -111,7 +112,7 @@ public class test {
 
     public static void test_localClusteringCoef(CommunityService service) {
         if(!service.graph_exists("email_undirected"))
-            service.create_graph("email_undirected", "Person", "Send", false) ;
+            service.create_graph("email_undirected", "Person", "Send", false, true) ;
         List<Map<String, Object>> res = service.localClusteringCoef("email_undirected", "stream") ;
         if(res.isEmpty()){
             System.out.println("Vide !");
