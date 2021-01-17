@@ -90,6 +90,11 @@ public class DbRoutes implements SparkApplication {
        //search a node in the graph given his name. .
         get("/search", (req, res) -> gson.toJson(service.search(req.queryParams("q"))));
 
+        //Test Jenkins commit
+        get("/testJenkins", (req, res) -> {
+            return "Work";
+        });
+
         //return the whole graph, if too bug, only return 100 first nodes. (+connexion)
         get("/graph", (req, res) -> {
             int limit = req.queryParams("limit") != null ? Integer.parseInt(req.queryParams("limit")) : 100;
