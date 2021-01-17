@@ -30,11 +30,8 @@ public class DbRoutes implements SparkApplication {
 
     private final CommunityService service;
 
-    private GraphCreate graphCreate ;
-
     public DbRoutes(CommunityService service) {
         this.service = service;
-        this.graphCreate = new GraphCreate(service) ;
     }
 
     public void init() {
