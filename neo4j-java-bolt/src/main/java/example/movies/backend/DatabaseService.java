@@ -161,10 +161,10 @@ public class DatabaseService {
         }
     }
 
-    protected void write_query(String query) {
+    protected List<Map<String, Object>> write_query(String query) {
         try(Session session = getSession()) {
-            session.writeTransaction(
-                    tx -> tx.run(query)
+            return session.writeTransaction(
+                    tx -> tx.run(query).list( r -> r.asMap(DatabaseService::convert))
             );
         }
     }

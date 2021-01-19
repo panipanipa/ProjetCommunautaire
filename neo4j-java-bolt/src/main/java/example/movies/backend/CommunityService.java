@@ -61,6 +61,25 @@ public class CommunityService extends DatabaseService {
         return (Boolean) result.get(0).get("exists") ;
     }
 
+    public List<Map<String, Object>> getNodeProperty(String name, List<String> properties) {
+        StringBuilder query = new StringBuilder("Call gds.graph.streamNodeProperties($name, [") ;
+        boolean first = true ;
+        for (String prop:properties) {
+            if(!first) {
+                query.append(", ");
+            }
+            query.append("'").append(prop).append("'");
+            first = false ;
+        }
+        query.append("]) Yield nodeId as id, nodeProperty as what, propertyValue as val ") ;
+        query.append("return gds.util.asNode(id).name as name, gds.util.asNode(id).department as solution, what, val") ;
+        var result = query(
+                query.toString(),
+                Map.of("name" , name)
+        ) ;
+        return result ;
+    }
+
     /*
         Call gds.labelPropagation.stream("email_undirected")
     YIELD nodeId, communityId
@@ -90,9 +109,11 @@ public class CommunityService extends DatabaseService {
              */
             res = query(query2.toString(), Map.of("name", name)) ;
         } else if (modes.contains(mode)) {
-            query = "Call gds.louvain." + mode + "($name) " +
-                    "YIELD communityCount, ranIterations, didConverge,  computeMillis, communityDistribution";
-            res = query(query, Map.of("name", name)) ;
+            query = "Call gds.louvain." + mode + "('" + name + "'" +
+                    ("stats".equals(mode) ? "" : ", { "+mode+"Property"+": '"+ fields.get(0) +"' }")+ ") " +
+                    "YIELD communityCount, createMillis, computeMillis, communityDistribution " +
+                    "Return communityCount, createMillis, computeMillis, communityDistribution";
+            res = write_query(query) ;
         }
         return res;
     }
@@ -116,14 +137,16 @@ public class CommunityService extends DatabaseService {
             res = query(query, Map.of("name", name)) ;
              */
         } else if (modes.contains(mode)) {
-            query = "Call gds.labelPropagation." + mode + "($name) " +
-                    "YIELD communityCount, ranIterations, didConverge,  computeMillis, communityDistribution";
-            res = query(query, Map.of("name", name)) ;
+            query = "Call gds.labelPropagation." + mode + "('" + name + "'" +
+                    ("stats".equals(mode) ? "" : ", { "+mode+"Property"+": '"+ fields.get(0) +"' }")+ ") " +
+                    "YIELD communityCount, createMillis, computeMillis, communityDistribution " +
+                    "Return communityCount, createMillis, computeMillis, communityDistribution";
+            res = write_query(query) ;
         }
         return res;
     }
 
-    public List<Map<String, Object>> triangle(String name, String mode) {
+    public List<Map<String, Object>> triangle(String name, String mode, List<String> fields) {
         List<Map<String, Object>> res = null;
         String query = "" ;
         //Triangle count node by node.
@@ -135,14 +158,16 @@ public class CommunityService extends DatabaseService {
             res = query(query, Map.of("name", name)) ;
         }
         else if (modes.contains(mode)) {
-            query = "Call gds.triangleCount." + mode + "($name) " +
-                    "YIELD globalTriangleCount, computeMillis";
-            res = query(query, Map.of("name", name)) ;
+            query = "Call gds.triangleCount." + mode + "('" + name + "'" +
+                    ("stats".equals(mode) ? "" : ", { "+mode+"Property"+": '"+ fields.get(0) +"' }")+ ") " +
+                    "YIELD globalTriangleCount, createMillis, computeMillis " +
+                    "Return globalTriangleCount, createMillis, computeMillis";
+            res = write_query(query) ;
         }
         return res;
     }
 
-    public List<Map<String, Object>> localClusteringCoef(String name, String mode) {
+    public List<Map<String, Object>> localClusteringCoef(String name, String mode,  List<String> fields) {
         List<Map<String, Object>> res = null ;
         String query = "" ;
         if ("stream".equals(mode)) {
@@ -153,9 +178,11 @@ public class CommunityService extends DatabaseService {
             res = query(query, Map.of("name", name)) ;
         }
         else if (modes.contains(mode)) {
-            query = "Call gds.localClusteringCoefficient." + mode + "($name) " +
-                    "YIELD averageClusteringCoefficient as avCef, nodeCount, computeMillis";
-            res = query(query, Map.of("name", name)) ;
+            query = "Call gds.localClusteringCoefficient." + mode + "('" + name + "'" +
+                    ("stats".equals(mode) ? "" : ", { "+mode+"Property"+": '"+ fields.get(0) +"' }")+ ") " +
+                    "YIELD averageClusteringCoefficient as avCef, nodeCount, createMillis, computeMillis " +
+                    "Return avCef, nodeCount, createMillis, computeMillis";
+            res = write_query(query) ;
         }
         return res;
     }

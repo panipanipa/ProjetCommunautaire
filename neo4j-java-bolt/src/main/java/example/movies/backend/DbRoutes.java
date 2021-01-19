@@ -2,6 +2,7 @@ package example.movies.backend;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 import spark.servlet.SparkApplication;
 
 import javax.servlet.MultipartConfigElement;
@@ -14,14 +15,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Map;
+import java.util.*;
 
-
-import static spark.Spark.get;
-import static spark.Spark.post ;
-import static spark.Spark.path;
+import static spark.Spark.*;
 
 
 public class DbRoutes implements SparkApplication {
@@ -36,6 +32,7 @@ public class DbRoutes implements SparkApplication {
 
     public void init() {
 
+        //create graph in-memory
         post("/create", (request, response) -> {
             response.type("application/json");
             GraphIn graph = new Gson().fromJson(request.body(), GraphIn.class);
@@ -43,8 +40,31 @@ public class DbRoutes implements SparkApplication {
             return "OK" ;
         });
 
+        put("/detectComu", (request, response) -> {
+            Map<String, Object> json = new Gson().fromJson(request.body(), new TypeToken<Map<String, Object>>() {}.getType());
+            String algo = json.get("algo").toString() ;
+            String name = json.get("name").toString() ;
+            List<Map<String, Object>> answer = null;
+            switch(algo) {
+                case "louvain" :
+                     answer = service.louvain(name, "mutate", Collections.singletonList("communityId"));
+                     break;
+                case "label" :
+                    answer = service.labelPropagation(name, "mutate", Collections.singletonList("communityId"));
+                    break;
+                case "triangle" :
+                    answer = service.triangle(name, "mutate", Collections.singletonList("triangles"));
+                    break;
+                case "clustering" :
+                    answer = service.localClusteringCoef(name, "mutate", Collections.singletonList("coefs"));
+                    break;
+            }
+           return gson.toJson(answer) ;
+        });
+
         post("/test", (request, response) -> {
-            String location = "/home/denis/5A/"; // the directory location where files will be stored
+            //String location = "/home/denis/5A/"; // the directory location where files will be stored
+            String location = "/home/user";
             String answer= "OK";
             long maxFileSize = 100000000;       // the maximum size allowed for uploaded files
             long maxRequestSize = 100000000;    // the maximum size allowed for multipart/form-data requests
@@ -69,7 +89,7 @@ public class DbRoutes implements SparkApplication {
 
             Part uploadedFile = request.raw().getPart("file");
 
-            File dest = new File("/home/denis/5A/testUpload.txt");
+            File dest = new File("/home/user/testUpload.txt");
             if(dest.createNewFile() ) {
                 Path out = dest.toPath() ;
                 //Path out = Paths.get("home/denis/5A/" + fName+ "Server");
@@ -128,7 +148,7 @@ public class DbRoutes implements SparkApplication {
                 String name = URLDecoder.decode(req.params("name"),  StandardCharsets.UTF_8) ;
                 Object result ;
                 if(service.graph_exists(name)) {
-                     result = gson.toJson(service.triangle(name, "stream")) ;
+                     result = gson.toJson(service.triangle(name, "stream", Collections.emptyList())) ;
                 }
                 else {
                     result = "Graph does not exists" ;
