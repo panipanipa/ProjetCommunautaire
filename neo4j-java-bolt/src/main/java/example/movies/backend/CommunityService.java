@@ -98,7 +98,8 @@ public class CommunityService extends DatabaseService {
             query2 .append("gds.louvain.stream($name) YIELD nodeId, communityId RETURN communityId") ;
             int i = 0 ;
             for (String field:fields) {
-                query2.append(",collect(gds.util.asNode(nodeId).").append(field).append(") as f").append(i) ;
+                query2.append(", collect(gds.util.asNode(nodeId).").append(field).append(") as f").append(i) ;
+                i++ ;
             }
             /*
             query = "Call gds.louvain.stream($name) " +
@@ -127,6 +128,7 @@ public class CommunityService extends DatabaseService {
             int i = 0;
             for (String field : fields) {
                 query2.append(",collect(gds.util.asNode(nodeId).").append(field).append(") as f").append(i);
+                i++ ;
             }
             res = query(query2.toString(), Map.of("name", name)) ;
             /*

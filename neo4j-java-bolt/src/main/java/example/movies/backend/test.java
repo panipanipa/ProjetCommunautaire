@@ -42,8 +42,8 @@ public class test {
         //create the graph and launches Louvain
         if(!service.graph_exists("email_undirected"))
             service.create_graph("email_undirected", "Person", "Send", false, true) ;
-        List<Map<String, Object>> res = service.labelPropagation("email_undirected", "stream",
-                Collections.singletonList("department"));
+        List<Map<String, Object>> res = service.louvain("email_undirected", "stream",
+                Arrays.asList("personId", "department"));
         if(res.isEmpty()){
             System.out.println("Vide !");
         }
@@ -213,9 +213,9 @@ public class test {
         Driver driver = GraphDatabase.driver("bolt://localhost", AuthTokens.basic("neo4j", "neo4j"));
         try (Session session = driver.session()) {
             var service = new CommunityService(driver, Environment.getNeo4jDatabase()) ;
-            //test_Louvain(service);
+            test_Louvain(service);
             //test_mutate(service);
-            test_getProperties(service) ;
+            //test_getProperties(service) ;
         }
         driver.close();
     }

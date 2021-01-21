@@ -129,6 +129,7 @@ public class DbRoutes implements SparkApplication {
 
             get("/louvain/:name", (req,res) -> {
                 String name = URLDecoder.decode(req.params("name"),  StandardCharsets.UTF_8) ;
+                System.out.println(name);
                 if(!service.graph_exists(name))
                     return "graph does not exists !" ;
                 else
@@ -138,6 +139,7 @@ public class DbRoutes implements SparkApplication {
             //launch labelPropagation one.
             get("/labelPropagation/:name", (req,res) -> {
                 String name = URLDecoder.decode(req.params("name"),  StandardCharsets.UTF_8) ;
+                System.out.println(name);
                 if(!service.graph_exists(name))
                     return "graph does not exists !" ;
                 else
