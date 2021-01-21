@@ -173,14 +173,23 @@ public class test {
             Double size = (Double) values.get("size");
             Long triangle = (Long) values.get("triangle") ;
             HashMap<Object, Double> presence = (HashMap<Object, Double>) values.get("presence");
-            System.out.println(commu + " size : " + size + " & avg_triangle : " + (triangle/size)) ;
+
+            double max = 0.0 ;
+            String max_label = "" ;
             for ( Map.Entry<Object, Double> sol: presence.entrySet()) {
                  double taux = sol.getValue() ;
                  taux = taux / size *100;
-                 if(taux >10.0)
-                     System.out.print(" // " + sol.getKey() + " : " + taux ) ;
+                 if(taux > max) {
+                     max = taux ;
+                     max_label = sol.getKey().toString() ;
+                 }
             }
-            System.out.println("");
+            if(size>1.0) {
+                System.out.println(commu + " size : " + size + " & avg_triangle : " + (triangle/size)) ;
+                System.out.print("taux de presence max pour " + max_label + " : " + max ) ;
+                System.out.println("");
+            }
+
         }
     }
 
