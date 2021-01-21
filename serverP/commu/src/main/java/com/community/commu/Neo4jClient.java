@@ -1,9 +1,6 @@
 package com.community.commu;
 
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.AsyncRestOperations;
@@ -34,17 +31,51 @@ public class Neo4jClient {
         System.out.println(response) ;
     }
 
-    public static void getLouvain(String name) {
+    public static String getLouvain(String name) {
+        String url = baseURL + "community/louvain/"+name ;
+        RestTemplate restTemplate = new RestTemplate();
+        Map<String, Object> map = new HashMap<>();
+
+        ResponseEntity<String> response = restTemplate.getForEntity(url, String.class) ;
+        if (response.getStatusCode().equals(HttpStatus.OK)) {
+            return response.getBody();
+        }
+        else {
+            return response.getStatusCode().toString() ;
+        }
+
+    }
+
+    public static String getLabelP(String name) {
         String url = baseURL + "community/labelPropagation/"+name ;
         RestTemplate restTemplate = new RestTemplate();
         Map<String, Object> map = new HashMap<>();
 
         ResponseEntity<String> response = restTemplate.getForEntity(url, String.class) ;
-        System.out.println(response) ;
-
+        if (response.getStatusCode().equals(HttpStatus.OK)) {
+            return response.getBody();
+        }
+        else {
+            return response.getStatusCode().toString() ;
+        }
     }
 
-    public static void main(String[] args) {
+    public static String getTriangle(String name) {
+        String url = baseURL + "community/triangle/" + name;
+        RestTemplate restTemplate = new RestTemplate();
+        Map<String, Object> map = new HashMap<>();
+
+        ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
+        if (response.getStatusCode().equals(HttpStatus.OK)) {
+            return response.getBody();
+        } else {
+            return response.getStatusCode().toString();
+        }
+    }
+
+
+
+        public static void main(String[] args) {
         Map<String, Object> map = new HashMap<>();
         map.put("name", "java2");
         map.put("nodetype", "Person");
@@ -52,7 +83,8 @@ public class Neo4jClient {
         map.put("directed", false);
         map.put("wasOriented", true);
        // createGraphIn(map);
-        getLouvain("java2"); ;
+        String res = getTriangle("java2") ;
+        System.out.println(res);
     }
 
 }
