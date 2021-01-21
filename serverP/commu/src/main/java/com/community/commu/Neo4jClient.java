@@ -14,27 +14,45 @@ import java.util.Map;
 
 public class Neo4jClient {
 
-    public static void createGraphIn() {
-        String url = "http://localhost:8080/create" ;
+    private static final String baseURL = "http://localhost:8080/" ;
+
+    private static HttpEntity<Map<String, Object>> request(Map<String, Object> map) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        return  new HttpEntity<>(map, headers);
+    }
+
+    public static void createGraphIn(Map<String, Object> map ) {
+        String url =  baseURL + "create" ;
         RestTemplate restTemplate = new RestTemplate();
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-
-        Map<String, Object> map = new HashMap<>();
-        map.put("name", "java");
-        map.put("nodetype", "Test");
-        map.put("relation", "Send");
-        map.put("directed", false);
-        map.put("wasOriented", true);
 
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(map, headers);
         ResponseEntity<String> response = restTemplate.postForEntity( url, entity , String.class );
         System.out.println(response) ;
     }
 
+    public static void getLouvain(String name) {
+        String url = baseURL + "community/labelPropagation/"+name ;
+        RestTemplate restTemplate = new RestTemplate();
+        Map<String, Object> map = new HashMap<>();
+
+        ResponseEntity<String> response = restTemplate.getForEntity(url, String.class) ;
+        System.out.println(response) ;
+
+    }
+
     public static void main(String[] args) {
-        createGraphIn() ;
+        Map<String, Object> map = new HashMap<>();
+        map.put("name", "java2");
+        map.put("nodetype", "Person");
+        map.put("relation", "Send");
+        map.put("directed", false);
+        map.put("wasOriented", true);
+       // createGraphIn(map);
+        getLouvain("java2"); ;
     }
 
 }
