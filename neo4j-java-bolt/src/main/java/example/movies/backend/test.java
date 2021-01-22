@@ -145,7 +145,7 @@ public class test {
         }
 
         //get node properties
-        List<Map<String, Object>> res3 = service.getNodeProperty("email_undirected", Arrays.asList("communityId", "triangle")) ;
+        List<Map<String, Object>> res3 = service.getNodeProperty("email_undirected", Arrays.asList("name", "department") ,Arrays.asList("communityId", "triangle")) ;
         HashMap<Object, HashMap<String,Object>> stat = new HashMap<>();
         Object key = null ;
         for (Map<String, Object> one:res3) {

@@ -61,7 +61,7 @@ public class CommunityService extends DatabaseService {
         return (Boolean) result.get(0).get("exists") ;
     }
 
-    public List<Map<String, Object>> getNodeProperty(String name, List<String> properties) {
+    public List<Map<String, Object>> getNodeProperty(String name,List<String> fields,  List<String> properties) {
         StringBuilder query = new StringBuilder("Call gds.graph.streamNodeProperties($name, [") ;
         boolean first = true ;
         for (String prop:properties) {
@@ -72,7 +72,19 @@ public class CommunityService extends DatabaseService {
             first = false ;
         }
         query.append("]) Yield nodeId as id, nodeProperty as what, propertyValue as val ") ;
-        query.append("return gds.util.asNode(id).name as name, gds.util.asNode(id).department as solution, what, val") ;
+        first = true ;
+        if(!fields.isEmpty()) {
+            query.append("return " );
+            for (String field : fields) {
+                if(!first) {
+                    query.append(", ");
+                }
+                query.append("gds.util.asNode(id).").append(field).append(" as ").append(field) ;
+                first = false ;
+            }
+            query.append(", what, val") ;
+        }
+        //query.append("return gds.util.asNode(id).name as name, gds.util.asNode(id).department as solution, what, val") ;
         var result = query(
                 query.toString(),
                 Map.of("name" , name)

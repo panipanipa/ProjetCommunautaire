@@ -9,6 +9,7 @@ import javax.servlet.MultipartConfigElement;
 import javax.servlet.http.Part;
 import java.io.File;
 import java.io.InputStream;
+import java.lang.reflect.Type;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -44,23 +45,40 @@ public class DbRoutes implements SparkApplication {
             Map<String, Object> json = new Gson().fromJson(request.body(), new TypeToken<Map<String, Object>>() {}.getType());
             String algo = json.get("algo").toString() ;
             String name = json.get("name").toString() ;
+            String prop = json.get("property").toString() ;
             List<Map<String, Object>> answer = null;
             switch(algo) {
                 case "louvain" :
-                     answer = service.louvain(name, "mutate", Collections.singletonList("communityId"));
+                     answer = service.louvain(name, "mutate", Collections.singletonList(prop));
                      break;
                 case "label" :
-                    answer = service.labelPropagation(name, "mutate", Collections.singletonList("communityId"));
+                    answer = service.labelPropagation(name, "mutate", Collections.singletonList(prop));
                     break;
                 case "triangle" :
-                    answer = service.triangle(name, "mutate", Collections.singletonList("triangles"));
+                    answer = service.triangle(name, "mutate", Collections.singletonList(prop));
                     break;
                 case "clustering" :
-                    answer = service.localClusteringCoef(name, "mutate", Collections.singletonList("coefs"));
+                    answer = service.localClusteringCoef(name, "mutate", Collections.singletonList(prop));
                     break;
             }
            return gson.toJson(answer) ;
         });
+
+        get("/properties/:name/:fields/:properties", (req, res) -> {
+            String name = URLDecoder.decode(req.params("name"),  StandardCharsets.UTF_8) ;
+            String json = URLDecoder.decode(req.params("fields"),  StandardCharsets.UTF_8) ;
+            Type type = new TypeToken<List<String>>(){}.getType();
+            List<String> fields = gson.fromJson(json, type);
+            String json2 = URLDecoder.decode(req.params("properties"),  StandardCharsets.UTF_8) ;
+            Type type2 = new TypeToken<List<String>>(){}.getType();
+            List<String> properties = gson.fromJson(json2, type2);
+            System.out.println(name);
+            if(!service.graph_exists(name))
+                return "graph does not exists !" ;
+            else
+                return gson.toJson(service.getNodeProperty(name, fields,properties)) ;
+        }
+                );
 
         post("/test", (request, response) -> {
             //String location = "/home/denis/5A/"; // the directory location where files will be stored
@@ -127,23 +145,30 @@ public class DbRoutes implements SparkApplication {
         //launche community detection algorithm
         path("/community", () -> {
 
-            get("/louvain/:name", (req,res) -> {
+            get("/louvain/:name/:fields", (req,res) -> {
                 String name = URLDecoder.decode(req.params("name"),  StandardCharsets.UTF_8) ;
+                String json = URLDecoder.decode(req.params("fields"),  StandardCharsets.UTF_8) ;
+                Type type = new TypeToken<List<String>>(){}.getType();
+                List<String> fields = gson.fromJson(json, type);
                 System.out.println(name);
+                System.out.println(json);
                 if(!service.graph_exists(name))
                     return "graph does not exists !" ;
                 else
-                    return gson.toJson(service.louvain(name, "stream", Arrays.asList("personId", "department"))) ;
+                    return gson.toJson(service.louvain(name, "stream", fields));
             }) ;
 
             //launch labelPropagation one.
-            get("/labelPropagation/:name", (req,res) -> {
+            get("/labelPropagation/:name/:fields", (req,res) -> {
                 String name = URLDecoder.decode(req.params("name"),  StandardCharsets.UTF_8) ;
+                String json = URLDecoder.decode(req.params("fields"),  StandardCharsets.UTF_8) ;
+                Type type = new TypeToken<List<String>>(){}.getType();
+                List<String> fields = gson.fromJson(json, type);
                 System.out.println(name);
                 if(!service.graph_exists(name))
                     return "graph does not exists !" ;
                 else
-                    return gson.toJson(service.labelPropagation(name, "stream", Arrays.asList("personId", "department"))) ;
+                    return gson.toJson(service.labelPropagation(name, "stream", fields)) ;
             }) ;
 
             get("/triangle/:name", (req,res)-> {
