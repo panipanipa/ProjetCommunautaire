@@ -52,7 +52,6 @@ public class Neo4jClient {
     public static String getLouvain(String name, String fields) {
         String url = baseURL + "community/louvain/"+name+"/"+fields ;
         RestTemplate restTemplate = new RestTemplate();
-        Map<String, Object> map = new HashMap<>();
 
         ResponseEntity<String> response = restTemplate.getForEntity(url, String.class) ;
         if (response.getStatusCode().equals(HttpStatus.OK)) {
@@ -64,10 +63,9 @@ public class Neo4jClient {
 
     }
 
-    public static String getLabelP(String name) {
-        String url = baseURL + "community/labelPropagation/"+name ;
+    public static String getLabelP(String name, String fields) {
+        String url = baseURL + "community/labelPropagation/"+name +"/"+fields ;
         RestTemplate restTemplate = new RestTemplate();
-        Map<String, Object> map = new HashMap<>();
 
         ResponseEntity<String> response = restTemplate.getForEntity(url, String.class) ;
         if (response.getStatusCode().equals(HttpStatus.OK)) {
