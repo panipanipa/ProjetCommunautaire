@@ -37,6 +37,18 @@ public class Neo4jClient {
         System.out.println(response) ;
     }
 
+    public static void createProperty(Map<String, Object> map ) {
+        String url =  baseURL + "/detectComu" ;
+        RestTemplate restTemplate = new RestTemplate();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(map, headers);
+        ResponseEntity<String> response = restTemplate.exchange( url, HttpMethod.PUT, entity , String.class);
+        System.out.println(response) ;
+    }
+
     public static String getLouvain(String name, String fields) {
         String url = baseURL + "community/louvain/"+name+"/"+fields ;
         RestTemplate restTemplate = new RestTemplate();
@@ -67,9 +79,8 @@ public class Neo4jClient {
     }
 
     public static String getNodeProperties(String name, String fields, String properties) {
-        String url = baseURL + "properties/"+name+"/"+fields+"/"+"properties" ;
+        String url = baseURL + "properties/"+name+"/"+fields+"/"+properties ;
         RestTemplate restTemplate = new RestTemplate();
-        Map<String, Object> map = new HashMap<>();
 
         ResponseEntity<String> response = restTemplate.getForEntity(url, String.class) ;
         if (response.getStatusCode().equals(HttpStatus.OK)) {
@@ -144,16 +155,15 @@ public class Neo4jClient {
             Object what = one.get("what");
             if (what.equals("communityId")) {
                 key = one.get("val");
-                Object commu = one.get("solution");
-                ;
+                Object commu = one.get("department");
                 if (!stat.containsKey(key)) {
                     stat.put(key, new HashMap<>());
                     stat.get(key).put("presence", new HashMap<>());
                 }
                 HashMap tab = (HashMap) stat.get(key).get("presence");
                 tab.merge(String.valueOf(commu), 1.0, (oldValue, newValue) -> (Double) oldValue + (Double) newValue);
-            } else if (what.equals("triangle")) {
-                stat.get(key).merge("triangle", (Long) one.get("val"), (oldValue, newValue) -> (Long) oldValue + (Long) newValue);
+            } else if (what.equals("triangles")) {
+                stat.get(key).merge("triangles", (Double) one.get("val"), (oldValue, newValue) -> (Double)oldValue + (Double) newValue);
                 stat.get(key).merge("size", 1.0, (oldValue, newValue) -> (Double) oldValue + (Double) newValue);
             }
         }
@@ -164,7 +174,7 @@ public class Neo4jClient {
             Object commu = entry.getKey();
             HashMap values = entry.getValue();
             Double size = (Double) values.get("size");
-            Long triangle = (Long) values.get("triangle");
+            Double triangle = (Double) values.get("triangles");
             HashMap<Object, Double> presence = (HashMap<Object, Double>) values.get("presence");
 
             double max = 0.0;
@@ -188,13 +198,25 @@ public class Neo4jClient {
 
     public static void main(String[] args) {
         Map<String, Object> map = new HashMap<>();
-        map.put("name", "java2");
+        map.put("name", "java");
         map.put("nodetype", "Test");
         map.put("relation", "Send");
         map.put("directed", false);
         map.put("wasOriented", true);
-        createGraphIn(map) ;
-        String res = getLouvain("java2", "[department]") ;
+
+        Map<String, Object> put = new HashMap<>();
+        put.put("algo", "louvain") ;
+        put.put("property", "communityId") ;
+        put.put("name", "java") ;
+        //createProperty(put);
+        put.replace("algo", "triangle");
+        put.replace("property", "triangles");
+        //createProperty(put);
+        String res = getNodeProperties("java", "[department]", "[communityId, triangles]");
+        //createGraphIn(map) ;
+        //String res = getLouvain("java", "[department]") ;
+
+        System.out.print(getAnalyseNP(res));
 
         //System.out.println(res);
     }
